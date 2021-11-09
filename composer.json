@@ -1,0 +1,19 @@
+{
+  "name": "prestashop/textbanner",
+  "description": "PrestaShop module textbanner",
+  "homepage": "https://github.com/vallka",
+  "license": "AFL-3.0",
+  "authors": [
+    {
+      "name": "vallka",
+      "email": "vallka@vallka.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.4"
+  },
+  "config": {
+    "preferred-install": "dist"
+  },
+  "type": "prestashop-module"
+}
