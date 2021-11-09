@@ -18,10 +18,9 @@
 * versions in the future. If you wish to customize PrestaShop for your
 * needs please refer to http://www.prestashop.com for more information.
 *
-*  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2015 PrestaShop SA
+*  @author Vallka <vallka@vallka.com>
+*  @copyright  2015-2021 vallka
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
-*  International Registered Trademark & Property of PrestaShop SA
 */
 
 if (!defined('_PS_VERSION_')) {
@@ -60,9 +59,15 @@ class textbanner extends Module implements WidgetInterface
         return (parent::install() &&
             $this->registerHook('displayBanner') &&
             $this->registerHook('actionObjectLanguageAddAfter') &&
+            $this->registerHook('backOfficeHeader') &&
             $this->installFixtures() 
             /*&& $this->disableDevice(Context::DEVICE_MOBILE)*/
         );
+    }
+
+    public function hookBackOfficeHeader()
+    {
+        $this->context->controller->addJS($this->_path.'views/js/back.js');
     }
 
     public function hookActionObjectLanguageAddAfter($params)
