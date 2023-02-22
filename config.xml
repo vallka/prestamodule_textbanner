@@ -2,7 +2,7 @@
 <module>
     <name>textbanner</name>
     <displayName><![CDATA[TextBanner]]></displayName>
-    <version><![CDATA[0.1.0]]></version>
+    <version><![CDATA[1.0.0]]></version>
     <description><![CDATA[Displays a text banner on your shop.]]></description>
     <author><![CDATA[Vallka]]></author>
     <tab><![CDATA[]]></tab>

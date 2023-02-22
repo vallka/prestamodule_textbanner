@@ -12,14 +12,12 @@
 * obtain it through the world-wide-web, please send an email
 * to license@prestashop.com so we can send you a copy immediately.
 *
-* DISCLAIMER
-*
-* Do not edit or add to this file if you wish to upgrade PrestaShop to newer
-* versions in the future. If you wish to customize PrestaShop for your
-* needs please refer to http://www.prestashop.com for more information.
+* DESCRIPTION
+* Instead of using an image for a top banner (as in the original ps_banner module),
+* it is much more easy and practical to use simple HTML text with predefined (by the theme) colors
 *
 *  @author Vallka <vallka@vallka.com>
-*  @copyright  2015-2021 vallka
+*  @copyright  2015-2023 vallka
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 */
 
@@ -27,16 +25,21 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+
 use PrestaShop\PrestaShop\Core\Module\WidgetInterface;
+
 
 class textbanner extends Module implements WidgetInterface
 {
+    private $write_log = false;
+
     private $templateFile;
 
 	public function __construct()
 	{
 		$this->name = 'textbanner';
-		$this->version = '0.1.0';
+        $this->tab = 'front_office_features';
+		$this->version = '1.0.0';
 		$this->author = 'Vallka';
 		$this->need_instance = 0;
 
@@ -54,20 +57,28 @@ class textbanner extends Module implements WidgetInterface
     public function install()
     {
 
-        PrestaShopLogger::addLog('Banner Install',1);
+        if ($this->write_log) PrestaShopLogger::addLog('Banner Install',1);
 
         return (parent::install() &&
             $this->registerHook('displayBanner') &&
             $this->registerHook('actionObjectLanguageAddAfter') &&
             $this->registerHook('backOfficeHeader') &&
             $this->installFixtures() 
-            /*&& $this->disableDevice(Context::DEVICE_MOBILE)*/
         );
     }
 
     public function hookBackOfficeHeader()
     {
-        $this->context->controller->addJS($this->_path.'views/js/back.js');
+        if ($this->write_log) PrestaShopLogger::addLog('Banner hookBackOfficeHeader:'.Tools::getValue('configure').'=='.$this->name,1);
+
+        //if (Tools::getValue('module_name') == $this->name) -- this doesn' work, correct is below:
+        //https://www.prestashop.com/forums/topic/937487-prestashop-17-backjs-not-visible-in-custom-module-admin-area/
+
+        if (Tools::getValue('configure') == $this->name) {
+            // in back.js we will show all languages at once, on the same screen. 
+            // This is to help to remember to update all languages when making an update
+            $this->context->controller->addJS($this->_path.'views/js/back.js');
+        }
     }
 
     public function hookActionObjectLanguageAddAfter($params)
@@ -97,7 +108,7 @@ class textbanner extends Module implements WidgetInterface
 
     public function uninstall()
     {
-        PrestaShopLogger::addLog('Banner UNInstall',1);
+        if ($this->write_log) PrestaShopLogger::addLog('Banner UNInstall',1);
 
         Configuration::deleteByName('TEXTBANNER_LINK');
         Configuration::deleteByName('TEXTBANNER_DESC');
@@ -149,7 +160,7 @@ class textbanner extends Module implements WidgetInterface
                         'lang' => true,
                         'label' => $this->trans('Banner Link', array(), 'Modules.Banner.Admin'),
                         'name' => 'TEXTBANNER_LINK',
-                        'desc' => $this->trans('Enter the link associated to your banner. When clicking on the banner, the link opens in the same window. If no link is entered, it redirects to the homepage.', array(), 'Modules.TextBanner.Admin')
+                        'desc' => $this->trans('Enter the link associated to your banner. When clicking on the banner, the link opens in the same window. The link must be absolute (starting with "http://" or "https://") or relative - starting with "/" or "."', array(), 'Modules.TextBanner.Admin')
                     ),
                     array(
                         'type' => 'textarea',
@@ -206,7 +217,7 @@ class textbanner extends Module implements WidgetInterface
             $this->smarty->assign($this->getWidgetVariables($hookName, $params));
         }
 
-        //PrestaShopLogger::addLog('Banner renderWidget:'.$this->fetch($this->templateFile, $this->getCacheId('textbanner')),1);
+        if ($this->write_log) PrestaShopLogger::addLog('Banner renderWidget:'.$this->fetch($this->templateFile, $this->getCacheId('textbanner')),1);
 
         return $this->fetch($this->templateFile, $this->getCacheId('textbanner'));
     }
@@ -216,7 +227,7 @@ class textbanner extends Module implements WidgetInterface
 
         $textbanner_link = Configuration::get('TEXTBANNER_LINK', $this->context->language->id);
 
-        //PrestaShopLogger::addLog('Banner getWidgetVariables:'.Configuration::get('TEXTBANNER_DESC', $this->context->language->id),1);
+        if ($this->write_log) PrestaShopLogger::addLog('Banner getWidgetVariables:'.Configuration::get('TEXTBANNER_DESC', $this->context->language->id),1);
 
         return array(
             'textbanner_link' => $this->updateUrl($textbanner_link),
@@ -227,8 +238,9 @@ class textbanner extends Module implements WidgetInterface
     private function updateUrl($link)
     {
         if ($link) {
-            if (substr($link, 0, 7) !== "http://" && substr($link, 0, 8) !== "https://") {
-                $link = "http://" . $link;
+            // allow relative URLs starting with / or ./ or ../
+            if (substr($link,0,7)!=="http://" && substr($link,0,8)!=="https://" && substr($link,0,1)!=="/" && substr($link,0,1)!==".") {
+                $link = "https://" . $link;
             }
         }
 
